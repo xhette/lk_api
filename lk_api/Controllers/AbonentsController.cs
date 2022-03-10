@@ -78,7 +78,7 @@ namespace lk_api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
             }
 
-            var abonentResult = await dbRepository.ChangeAbonent(user.AbonentId.Value);
+            var abonentResult = await dbRepository.ChangeAbonent(user.AbonentId.Value, (Abonent)abonent);
 
             if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
             {
