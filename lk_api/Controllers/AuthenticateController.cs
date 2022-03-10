@@ -10,8 +10,6 @@ using lk_api.UsersDatabase;
 using lk_api.UsersDatabase.Models;
 using lk_db;
 using lk_db.LkDatabase.Models;
-using lk_api.UsersDatabase;
-
 namespace lk_api.Controllers
 {
     [Route("api/[controller]")]
@@ -30,7 +28,7 @@ namespace lk_api.Controllers
         }
 
         [HttpPost]
-        [Route("login")]
+        [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var user = await userManager.FindByNameAsync(model.Login);
@@ -54,7 +52,7 @@ namespace lk_api.Controllers
                 var token = new JwtSecurityToken(
                     issuer: _configuration["JWT:ValidIssuer"],
                     audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
+                    expires: DateTime.Now.AddHours(24),
                     claims: authClaims,
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                     );
@@ -69,7 +67,7 @@ namespace lk_api.Controllers
         }
 
         [HttpPost]
-        [Route("register")]
+        [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             var userExists = await userManager.FindByEmailAsync(model.Email);
@@ -107,7 +105,7 @@ namespace lk_api.Controllers
 
 
         [HttpPost]
-        [Route("register-admin")]
+        [Route("RegisterAdmin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminModel model)
         {
             var userExists = await userManager.FindByNameAsync(model.Login);
@@ -133,6 +131,22 @@ namespace lk_api.Controllers
             {
                 await userManager.AddToRoleAsync(user, UserRoles.Admin);
             }
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated || User.Identity.Name == null)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
+
+            var user = await userManager.FindByNameAsync(User.Identity.Name);
+            await userManager.UpdateSecurityStampAsync(user);
 
             return Ok();
         }

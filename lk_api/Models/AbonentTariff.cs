@@ -1,4 +1,8 @@
-﻿namespace lk_api.LkDatabase.Models
+﻿using lk.DbLayer.LkDatabase.Models;
+
+using lk_db.LkDatabase.Models;
+
+namespace lk_api.LkDatabase.Models
 {
     public class AbonentTariff
     {
@@ -12,5 +16,24 @@
         public string? CompanyAddress { get; set; }
         public string? CompanyPhone { get; set; }
         public string? CompanyEmail { get; set; }
+
+        public static explicit operator AbonentTariff (AbonentsTariff tariff)
+        {
+            if (tariff == null)
+                return null;
+            else return new AbonentTariff
+            {
+                Id = tariff.Id,
+                AbonentId = tariff.AbonentId,
+                TariffName = tariff.TariffName,
+                Payment = tariff.Payment,
+                Unit = tariff.Unit,
+                CompanyId = tariff.CompanyId,
+                CompanyName = tariff.CompanyName,
+                CompanyAddress = tariff.CompanyAddress,
+                CompanyPhone = tariff.CompanyPhone,
+                CompanyEmail = tariff.CompanyEmail,
+            };
+        }
     }
 }

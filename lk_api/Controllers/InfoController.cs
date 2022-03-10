@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using lk.DbLayer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace lk_api.Controllers
 {
@@ -25,17 +26,18 @@ namespace lk_api.Controllers
             dbRepository = new DatabaseRepository(configuration.GetConnectionString("LkDbConnection"));
         }
 
-        [Authorize(Roles = "user")]
+        [Authorize]
         [HttpGet]
         [Route("Info")]
         public async Task<ActionResult<AbonentInfo>> GetAbonentInfo()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated || User.Identity.Name == null)
+
+            if (!User.Identity.IsAuthenticated)
             {
                 return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
             }
 
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
 
             if (user == null || !user.AbonentId.HasValue)
             {
@@ -61,17 +63,17 @@ namespace lk_api.Controllers
 
         }
 
-        [Authorize(Roles = "user")]
+        [Authorize]
         [HttpPut]
         [Route("Info")]
         public async Task<ActionResult> PutAbonent(AbonentInfo abonent)
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated || User.Identity.Name == null)
+            if (HttpContext.User.Identity == null || !HttpContext.User.Identity.IsAuthenticated || HttpContext.User.Identity.Name == null)
             {
                 return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
             }
 
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
 
             if (user == null || !user.AbonentId.HasValue)
             {
@@ -89,5 +91,38 @@ namespace lk_api.Controllers
                 return StatusCode(StatusCodes.Status200OK, "Изменения успешно сохранены");
             }
         }
+
+        //[Authorize]
+        //[HttpPut]
+        //[Route("Info/Tariffs")]
+        //public async Task<ActionResult<IEnumerable<AbonentTariff>>> GetTariffs()
+        //{
+        //    if (!User.Identity.IsAuthenticated)
+        //    {
+        //        return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+        //    }
+
+        //    var user = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
+
+        //    if (user == null || !user.AbonentId.HasValue)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
+        //    }
+
+        //    var tariffsResult = await dbRepository.GetTariffs(user.AbonentId.Value);
+
+        //    if (tariffsResult == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    if (tariffsResult.ResultCode == ResultCodeEnum.Error || tariffsResult.InnerObject == null)
+        //    {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, tariffsResult.InnerMessage);
+        //    }
+        //    else
+        //    {
+        //        var tariffs = tariffsResult.InnerObject.Select(c => (AbonentTariff)c).ToList();
+        //    }
+        //}
     }
 }

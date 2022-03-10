@@ -80,6 +80,30 @@ namespace lk.DbLayer
                 InnerObject = abonent
             };
         }
+
+        public async Task<DbRepoResult<IEnumerable<Tariff>>> GetTariffs(int abonentId)
+        {
+            try
+            {
+                var tariffs = await dbContext.Tariffs.ToListAsync();
+
+                return new DbRepoResult<IEnumerable<Tariff>>
+                {
+                    InnerMessage = "",
+                    InnerObject = tariffs.Where(a => a.Id == abonentId).ToList(),
+                    ResultCode = ResultCodeEnum.Ok,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DbRepoResult<IEnumerable<Tariff>>
+                {
+                    ResultCode = ResultCodeEnum.Error,
+                    InnerMessage = ex.Message,
+                    InnerObject = null
+                };
+            }
+        }
     }
 }
 
