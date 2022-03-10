@@ -1,27 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Configuration;
+using lk_db.LkDatabase.Models;
 
-using lk_api.LkDatabase.Models;
-
-namespace lk_api
+namespace lk_db
 {
     public partial class lkDbContext : DbContext
     {
 
         private string _connectionString;
 
-        public lkDbContext(IConfiguration configuration)
+        public lkDbContext(string connectionString)
         {
-            _connectionString = configuration.GetConnectionString("LkDbConnection");
+            _connectionString = connectionString;
         }
 
-        public lkDbContext(DbContextOptions<lkDbContext> options,IConfiguration configuration)
+        public lkDbContext(DbContextOptions<lkDbContext> options,string connectionString)
             : base(options)
         {
-            _connectionString = configuration.GetConnectionString("LkDbConnection");
+            _connectionString = connectionString;
+
+            //configuration.GetConnectionString("LkDbConnection");
         }
 
         public virtual DbSet<Abonent> Abonents { get; set; } = null!;

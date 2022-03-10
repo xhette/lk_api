@@ -9,9 +9,9 @@ namespace lk_api.UsersDatabase
         private string _connectionString;
 
 
-        public UsersDbContext(DbContextOptions<UsersDbContext> options, IConfiguration configuration) : base(options)
+        public UsersDbContext(DbContextOptions<UsersDbContext> options, string connectionString) : base(options)
         {
-            _connectionString = configuration.GetConnectionString("UsersDbConnection");
+            _connectionString = connectionString;
         }
         protected override void OnModelCreating(ModelBuilder builder)
         {

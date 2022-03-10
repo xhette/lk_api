@@ -1,4 +1,4 @@
-﻿namespace lk_api.LkDatabase.ApiModels
+﻿namespace lk_api.LkDatabase.Models
 {
     public class AbonentTariff
     {

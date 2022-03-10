@@ -3,12 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using lk_api.LkDatabase.Models;
+
+using lk_db;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using lk_api;
-using lk_api.LkDatabase.Models;
-using lk_api.LkDatabase.ApiModels;
 
 namespace lk_api.Controllers
 {

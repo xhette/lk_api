@@ -1,17 +1,11 @@
 ﻿#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using lk_api;
-using lk_api.LkDatabase.Models;
 using Microsoft.AspNetCore.Authorization;
-using lk_api.UsersDatabase;
 using Microsoft.AspNetCore.Identity;
-using lk_api.LkDatabase.ApiModels;
+using lk_api.LkDatabase.Models;
+using lk_db;
+using lk_api.UsersDatabase;
 
 namespace lk_api.Controllers
 {

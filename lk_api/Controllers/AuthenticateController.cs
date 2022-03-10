@@ -1,8 +1,4 @@
-﻿using lk_api.UsersDatabase;
-using lk_api.UsersDatabase.Models;
-using lk_api.LkDatabase.Models;
-
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
@@ -10,6 +6,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using lk_api.UsersDatabase;
+using lk_api.UsersDatabase.Models;
+using lk_db;
+using lk_db.LkDatabase.Models;
+using lk_api.UsersDatabase;
 
 namespace lk_api.Controllers
 {
@@ -80,7 +81,9 @@ namespace lk_api.Controllers
 
             Abonent? abonent;
 
-            using (lkDbContext context = new lkDbContext(_configuration))
+
+
+            using (lkDbContext context = new lkDbContext(_configuration.GetConnectionString("LkDbConnection")))
             {
                 abonent = context.Abonents.Where(c => c.PersonalNumber == model.PersonalNumber).FirstOrDefault();
             }
@@ -100,7 +103,8 @@ namespace lk_api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "User creation failed! Please check user details and try again.");
 
             return Ok();
-        }
+       }
+
 
         [HttpPost]
         [Route("register-admin")]

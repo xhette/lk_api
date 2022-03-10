@@ -1,6 +1,6 @@
-﻿using lk_api.LkDatabase.Models;
+﻿using lk_db.LkDatabase.Models;
 
-namespace lk_api.LkDatabase.ApiModels
+namespace lk_api.LkDatabase.Models
 {
     public class AbonentInfo
     {

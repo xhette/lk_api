@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace lk_api.LkDatabase.Models
+namespace lk_db.LkDatabase.Models
 {
     public partial class Notiffication
     {

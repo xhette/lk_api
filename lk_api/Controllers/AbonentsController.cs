@@ -1,11 +1,14 @@
-﻿using lk_api.LkDatabase.ApiModels;
-using lk_api.LkDatabase.Models;
+﻿using lk_api.LkDatabase.Models;
+
+using lk_db;
+using lk_db.LkDatabase.Models;
 using lk_api.UsersDatabase;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using lk.DbLayer;
 
 namespace lk_api.Controllers
 {
@@ -13,121 +16,78 @@ namespace lk_api.Controllers
     [ApiController]
     public class AbonentsController : ControllerBase
     {
-        private readonly lkDbContext _context;
         private readonly UserManager<User> _userManager;
+        private readonly DatabaseRepository dbRepository;
 
-        public AbonentsController(lkDbContext context, UserManager<User> userManager)
+        public AbonentsController(UserManager<User> userManager, IConfiguration configuration)
         {
-            _context = context;
             _userManager = userManager;
-        }
-
-        // GET: api/Abonents
-        [Authorize(Roles = "admin")]
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Abonent>>> GetAbonents()
-        {
-            return await _context.Abonents.ToListAsync();
+            dbRepository = new DatabaseRepository(configuration.GetConnectionString("LkDbConnection"));
         }
 
         [Authorize(Roles = "user")]
         [HttpGet]
-        [Route("abonentinfo")]
+        [Route("Info")]
         public async Task<ActionResult<AbonentInfo>> GetAbonentInfo()
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated || User.Identity.Name == null)
             {
                 return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
             }
 
-            User? user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);
 
-            if (user == null)
-                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
+            if (user == null || !user.AbonentId.HasValue)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
+            }
 
-            var abonent = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault();
+            var abonentResult = await dbRepository.GetAbonent(user.AbonentId.Value);
 
-            if (abonent == null)
+            if (abonentResult == null)
             {
                 return NotFound();
             }
 
-            AbonentInfo abonentInfo = (AbonentInfo)abonent;
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
+            }
+            else
+            {
+                AbonentInfo abonentInfo = (AbonentInfo)abonentResult.InnerObject;
+                return abonentInfo;
+            }
 
-            return abonentInfo;
         }
 
         [Authorize(Roles = "user")]
         [HttpPut]
-        [Route("abonentinfo")]
+        [Route("Info")]
         public async Task<ActionResult> PutAbonent(AbonentInfo abonent)
         {
-            if (!User.Identity.IsAuthenticated)
+            if (User.Identity == null || !User.Identity.IsAuthenticated || User.Identity.Name == null)
             {
                 return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
             }
-            User? user = await _userManager.FindByNameAsync(User.Identity.Name);
 
-            if (user == null)
-                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
+            var user = await _userManager.FindByNameAsync(User.Identity.Name);
 
-            int id = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault().Id;
-
-            if (id != abonent.Id)
+            if (user == null || !user.AbonentId.HasValue)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
             }
 
-            _context.Entry(abonent).State = EntityState.Modified;
+            var abonentResult = await dbRepository.ChangeAbonent(user.AbonentId.Value);
 
-            try
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
             {
-                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
             }
-            catch (DbUpdateConcurrencyException)
+            else
             {
-                if (!AbonentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(StatusCodes.Status200OK, "Изменения успешно сохранены");
             }
-
-            return NoContent();
-        }
-
-        [Authorize(Roles = "admin")]
-        [HttpPost]
-        public async Task<ActionResult<Abonent>> PostAbonent(AbonentInfo abonent)
-        {
-            _context.Abonents.Add((Abonent)abonent);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetAbonent", new { id = abonent.Id }, abonent);
-        }
-
-        [Authorize(Roles = "admin")]
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteAbonent(int id)
-        {
-            var abonent = await _context.Abonents.FindAsync(id);
-            if (abonent == null)
-            {
-                return NotFound();
-            }
-
-            _context.Abonents.Remove(abonent);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool AbonentExists(int id)
-        {
-            return _context.Abonents.Any(e => e.Id == id);
         }
     }
 }
