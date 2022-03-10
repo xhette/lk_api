@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using lk_api;
 using lk_api.LkDatabase.Models;
+using Microsoft.AspNetCore.Authorization;
+using lk_api.UsersDatabase;
+using Microsoft.AspNetCore.Identity;
+using lk_api.LkDatabase.ApiModels;
 
 namespace lk_api.Controllers
 {
@@ -16,89 +20,54 @@ namespace lk_api.Controllers
     public class DevicesController : ControllerBase
     {
         private readonly lkDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public DevicesController(lkDbContext context)
+        public DevicesController(lkDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
+            _userManager = userManager;
+            _roleManager = roleManager;
         }
 
-        // GET: api/Devices
+        [Authorize(Roles = "user")]
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Device>>> GetDevices()
+        public async Task<ActionResult<IEnumerable<DeviceInfo>>> GetDevices()
         {
-            return await _context.Devices.ToListAsync();
-        }
-
-        // GET: api/Devices/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Device>> GetDevice(int id)
-        {
-            var device = await _context.Devices.FindAsync(id);
-
-            if (device == null)
+            if (!User.Identity.IsAuthenticated)
             {
-                return NotFound();
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
             }
 
-            return device;
-        }
+            User user = await _userManager.FindByNameAsync(User.Identity.Name);
 
-        // PUT: api/Devices/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutDevice(int id, Device device)
-        {
-            if (id != device.Id)
+            if (user == null)
             {
-                return BadRequest();
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
             }
 
-            _context.Entry(device).State = EntityState.Modified;
+            var abonent = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault();
 
-            try
+            if (abonent == null)
             {
-                await _context.SaveChangesAsync();
+                return StatusCode(StatusCodes.Status401Unauthorized, "Абонент не найден");
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DeviceExists(id))
+
+            var devices = await _context.Devices.Where(d => d.AbonentId == abonent.Id)
+                .Join(_context.DeviceTypes, d => d.Type, t => t.Id, (d,t) => new DeviceInfo
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+                    Id = d.Id,
+                    AbonentId = d.AbonentId,
+                    DeviceNumber = d.DeviceNumber,
+                    IndicationDate = d.IndicationDate,
+                    LastIndication = d.LastIndication,
+                    VerificationPeriod = d.VerificationPeriod,
+                    TypeId = d.Type,
+                    TypeName = t.TypeName
+                }).ToListAsync();
 
-            return NoContent();
-        }
 
-        // POST: api/Devices
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<Device>> PostDevice(Device device)
-        {
-            _context.Devices.Add(device);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetDevice", new { id = device.Id }, device);
-        }
-
-        // DELETE: api/Devices/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteDevice(int id)
-        {
-            var device = await _context.Devices.FindAsync(id);
-            if (device == null)
-            {
-                return NotFound();
-            }
-
-            _context.Devices.Remove(device);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return devices;
         }
 
         private bool DeviceExists(int id)

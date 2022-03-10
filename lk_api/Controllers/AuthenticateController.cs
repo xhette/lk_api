@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace lk_api.Controllers
 {
@@ -31,7 +32,7 @@ namespace lk_api.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
-            var user = await userManager.FindByNameAsync(model.PersonalNumber);
+            var user = await userManager.FindByNameAsync(model.Login);
             if (user != null && await userManager.CheckPasswordAsync(user, model.Password))
             {
                 var userRoles = await userManager.GetRolesAsync(user);
@@ -105,19 +106,19 @@ namespace lk_api.Controllers
         [Route("register-admin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] RegisterAdminModel model)
         {
-            var userExists = await userManager.FindByNameAsync(model.Email);
+            var userExists = await userManager.FindByNameAsync(model.Login);
             if (userExists != null)
                 return StatusCode(StatusCodes.Status500InternalServerError,"User already exists!" );
 
             User user = new User()
             {
-                Email = model.Email,
+                Email = "",
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = model.Email
+                UserName = model.Login
             };
             var result = await userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                return StatusCode(StatusCodes.Status500InternalServerError,  "User creation failed! Please check user details and try again.");
+                return StatusCode(StatusCodes.Status500InternalServerError,  "User creation failed! Please check user details and try again." );
 
             if (!await roleManager.RoleExistsAsync(UserRoles.Admin))
                 await roleManager.CreateAsync(new IdentityRole(UserRoles.Admin));

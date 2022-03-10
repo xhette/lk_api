@@ -35,10 +35,15 @@ namespace lk_api.Controllers
         [Route("abonentinfo")]
         public async Task<ActionResult<AbonentInfo>> GetAbonentInfo()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
+
             User? user = await _userManager.FindByNameAsync(User.Identity.Name);
 
             if (user == null)
-                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
 
             var abonent = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault();
 
@@ -57,10 +62,14 @@ namespace lk_api.Controllers
         [Route("abonentinfo")]
         public async Task<ActionResult> PutAbonent(AbonentInfo abonent)
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
             User? user = await _userManager.FindByNameAsync(User.Identity.Name);
 
             if (user == null)
-                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
 
             int id = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault().Id;
 

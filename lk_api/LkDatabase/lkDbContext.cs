@@ -11,20 +11,17 @@ namespace lk_api
     public partial class lkDbContext : DbContext
     {
 
-        private readonly IConfiguration _configuration;
         private string _connectionString;
 
         public lkDbContext(IConfiguration configuration)
         {
-            _configuration = configuration;
-            _connectionString = _configuration.GetConnectionString("LkDbConnection");
+            _connectionString = configuration.GetConnectionString("LkDbConnection");
         }
 
         public lkDbContext(DbContextOptions<lkDbContext> options,IConfiguration configuration)
             : base(options)
         {
-            _configuration = configuration;
-            _connectionString = _configuration.GetConnectionString("LkDbConnection");
+            _connectionString = configuration.GetConnectionString("LkDbConnection");
         }
 
         public virtual DbSet<Abonent> Abonents { get; set; } = null!;
