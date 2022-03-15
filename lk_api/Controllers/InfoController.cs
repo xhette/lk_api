@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using lk.DbLayer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using lk.API.Models;
 
 namespace lk_api.Controllers
 {
@@ -59,6 +60,43 @@ namespace lk_api.Controllers
             {
                 AbonentInfo abonentInfo = (AbonentInfo)abonentResult.InnerObject;
                 return abonentInfo;
+            }
+
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("Info/Fincard")]
+        public async Task<ActionResult<Fincard>> GetFincard()
+        {
+
+            if (!User.Identity.IsAuthenticated)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
+
+            var user = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
+
+            if (user == null || !user.AbonentId.HasValue)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
+            }
+
+            var abonentResult = await dbRepository.GetFincard(user.AbonentId.Value);
+
+            if (abonentResult == null)
+            {
+                return NotFound();
+            }
+
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
+            }
+            else
+            {
+                Fincard fincard = (Fincard)abonentResult.InnerObject;
+                return fincard;
             }
 
         }

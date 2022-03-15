@@ -47,26 +47,10 @@ namespace lk_api.Controllers
                 return StatusCode(StatusCodes.Status401Unauthorized, "Абонент не найден");
             }
 
-            var devices = await _context.Devices.Where(d => d.AbonentId == abonent.Id)
-                .Join(_context.DeviceTypes, d => d.Type, t => t.Id, (d,t) => new DeviceInfo
-                {
-                    Id = d.Id,
-                    AbonentId = d.AbonentId,
-                    DeviceNumber = d.DeviceNumber,
-                    IndicationDate = d.IndicationDate,
-                    LastIndication = d.LastIndication,
-                    VerificationPeriod = d.VerificationPeriod,
-                    TypeId = d.Type,
-                    TypeName = t.TypeName
-                }).ToListAsync();
+            
 
 
             return devices;
-        }
-
-        private bool DeviceExists(int id)
-        {
-            return _context.Devices.Any(e => e.Id == id);
         }
     }
 }

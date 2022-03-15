@@ -1,4 +1,6 @@
-﻿using lk_db;
+﻿using lk.DbLayer.LkDatabase.Models;
+
+using lk_db;
 using lk_db.LkDatabase.Models;
 
 using Microsoft.EntityFrameworkCore;
@@ -81,6 +83,7 @@ namespace lk.DbLayer
             };
         }
 
+        // TO-DO: хуйня переделывай
         public async Task<DbRepoResult<IEnumerable<Tariff>>> GetTariffs(int abonentId)
         {
             try
@@ -103,6 +106,57 @@ namespace lk.DbLayer
                     InnerObject = null
                 };
             }
+        }
+        public async Task<DbRepoResult<AbonentFincard>> GetFincard(int abonentId)
+        {
+            try
+            {
+                var fincard = await dbContext.Accurals.Where(a => a.Id == abonentId).ToListAsync();
+
+                AbonentFincard abonentFincard = new AbonentFincard(fincard);
+                abonentFincard.AbonentId = abonentId;
+
+                if (fincard.Count > 0)
+                {
+                   var fincardLast = fincard.OrderBy(c => c.Year).OrderBy(c => c.Month).FirstOrDefault();
+
+                    abonentFincard.Prepayment = fincardLast.Prepayment;
+                    abonentFincard.Payment = fincardLast.Payment;
+                    abonentFincard.Debt = fincardLast.Debt;
+                }
+
+                return new DbRepoResult<AbonentFincard>
+                {
+                    ResultCode = ResultCodeEnum.Ok,
+                    InnerMessage = "",
+                    InnerObject = abonentFincard
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DbRepoResult<AbonentFincard>
+                {
+                    ResultCode = ResultCodeEnum.Error,
+                    InnerMessage = ex.Message,
+                    InnerObject = null
+                };
+            }
+        }
+
+        public async Task<IEnumerable<AbonentDevice>> GetDevices(int abonentId)
+        {
+            var devices = await dbContext.Devices.Where(d => d.AbonentId == abonentId)
+                .Join(dbContext.DeviceTypes, d => d.Type, t => t.Id, (d, t) => new AbonentDevice
+                {
+                    Id = d.Id,
+                    AbonentId = d.AbonentId,
+                    DeviceNumber = d.DeviceNumber,
+                    IndicationDate = d.IndicationDate,
+                    LastIndication = d.LastIndication,
+                    VerificationPeriod = d.VerificationPeriod,
+                    TypeId = d.Type,
+                    TypeName = t.TypeName
+                }).ToListAsync();
         }
     }
 }
