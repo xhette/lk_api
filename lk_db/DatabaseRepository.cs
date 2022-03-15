@@ -177,6 +177,41 @@ namespace lk.DbLayer
                 };
             }
         }
+
+        public async Task<DbRepoResult<Device>> ChangeDevice(Device device, int id)
+        {
+            if (id != device.Id)
+            {
+                return new DbRepoResult<Device>
+                {
+                    ResultCode = ResultCodeEnum.Error,
+                    InnerMessage = "П/У не найден",
+                };
+            }
+
+            dbContext.Entry(device).State = EntityState.Modified;
+
+            try
+            {
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                return new DbRepoResult<Device>
+                {
+                    ResultCode = ResultCodeEnum.Error,
+                    InnerMessage = ex.Message,
+                    InnerObject = device
+                };
+            }
+
+            return new DbRepoResult<Device>
+            {
+                ResultCode = ResultCodeEnum.Ok,
+                InnerMessage = "",
+                InnerObject = device
+            };
+        }
     }
 }
 

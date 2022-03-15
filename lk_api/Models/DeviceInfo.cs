@@ -1,5 +1,7 @@
 ﻿using lk.DbLayer.LkDatabase.Models;
 
+using lk_db.LkDatabase.Models;
+
 namespace lk_api.LkDatabase.Models
 {
     public class DeviceInfo
@@ -27,6 +29,40 @@ namespace lk_api.LkDatabase.Models
                 IndicationDate = device.IndicationDate,
                 TypeId = device.TypeId,
                 TypeName = device.TypeName,
+            };
+        }
+
+        public static explicit operator AbonentDevice(DeviceInfo device)
+        {
+            if (device == null)
+                return null;
+            else return new AbonentDevice
+            {
+                Id = device.Id,
+                AbonentId = device.AbonentId,
+                DeviceNumber = device.DeviceNumber,
+                VerificationPeriod = device.VerificationPeriod,
+                LastIndication = device.LastIndication,
+                IndicationDate = device.IndicationDate,
+                TypeId = device.TypeId,
+                TypeName = device.TypeName,
+            };
+        }
+
+
+        public static explicit operator Device(DeviceInfo device)
+        {
+            if (device == null)
+                return null;
+            else return new Device
+            {
+                Id = device.Id,
+                AbonentId = device.AbonentId,
+                DeviceNumber = device.DeviceNumber,
+                VerificationPeriod = device.VerificationPeriod,
+                LastIndication = device.LastIndication,
+                IndicationDate = device.IndicationDate,
+                Type = device.TypeId,
             };
         }
     }

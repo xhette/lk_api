@@ -7,6 +7,7 @@ using lk_api.LkDatabase.Models;
 using lk_db;
 using lk_api.UsersDatabase;
 using lk.DbLayer;
+using lk_db.LkDatabase.Models;
 
 namespace lk_api.Controllers
 {
@@ -54,6 +55,60 @@ namespace lk_api.Controllers
             {
                 List<DeviceInfo> devices = abonentResult.InnerObject.Select(c => (DeviceInfo)c).ToList();
                 return devices;
+            }
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<ActionResult> AddLastIndication(double lastIndication, int deviceId)
+        {
+            if (!User.Identity.IsAuthenticated)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
+
+            var user = await _userManager.FindByNameAsync(HttpContext.User.Identity.Name);
+
+            if (user == null || !user.AbonentId.HasValue)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Пользователь не найден");
+            }
+
+            var abonentResult = await dbRepository.GetDevices(user.AbonentId.Value);
+
+            if (abonentResult == null)
+            {
+                return NotFound();
+            }
+
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка при поиске П/У. " + abonentResult.InnerMessage);
+            }
+            else
+            {
+                DeviceInfo device = abonentResult.InnerObject.Select(c => (DeviceInfo)c).ToList().Find(c => c.Id == deviceId);
+
+                if (device == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Ошибка при поиске П/У.");
+                }
+
+                device.LastIndication = lastIndication;
+
+                var result = await dbRepository.ChangeDevice((Device)device, deviceId);
+
+                if (result == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+                }
+
+                if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
+                }
+
+                return StatusCode(StatusCodes.Status200OK);
             }
         }
     }
