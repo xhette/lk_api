@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using lk_api.LkDatabase.Models;
 using lk_db;
 using lk_api.UsersDatabase;
+using lk.DbLayer;
 
 namespace lk_api.Controllers
 {
@@ -13,18 +14,16 @@ namespace lk_api.Controllers
     [ApiController]
     public class DevicesController : ControllerBase
     {
-        private readonly lkDbContext _context;
         private readonly UserManager<User> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly DatabaseRepository dbRepository;
 
-        public DevicesController(lkDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        public DevicesController(UserManager<User> userManager, IConfiguration configuration)
         {
-            _context = context;
             _userManager = userManager;
-            _roleManager = roleManager;
+            dbRepository = new DatabaseRepository(configuration.GetConnectionString("LkDbConnection"));
         }
 
-        [Authorize(Roles = "user")]
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<DeviceInfo>>> GetDevices()
         {
@@ -40,17 +39,22 @@ namespace lk_api.Controllers
                 return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
             }
 
-            var abonent = _context.Abonents.Where(a => a.PersonalNumber == user.PhoneNumber).FirstOrDefault();
+            var abonentResult = await dbRepository.GetDevices(user.AbonentId.Value);
 
-            if (abonent == null)
+            if (abonentResult == null)
             {
-                return StatusCode(StatusCodes.Status401Unauthorized, "Абонент не найден");
+                return NotFound();
             }
 
-            
-
-
-            return devices;
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
+            }
+            else
+            {
+                List<DeviceInfo> devices = abonentResult.InnerObject.Select(c => (DeviceInfo)c).ToList();
+                return devices;
+            }
         }
     }
 }

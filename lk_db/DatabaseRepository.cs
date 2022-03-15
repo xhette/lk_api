@@ -143,20 +143,39 @@ namespace lk.DbLayer
             }
         }
 
-        public async Task<IEnumerable<AbonentDevice>> GetDevices(int abonentId)
+        public async Task<DbRepoResult<IEnumerable<AbonentDevice>>> GetDevices(int abonentId)
         {
-            var devices = await dbContext.Devices.Where(d => d.AbonentId == abonentId)
-                .Join(dbContext.DeviceTypes, d => d.Type, t => t.Id, (d, t) => new AbonentDevice
+            try
+            {
+                var devices = await dbContext.Devices.Where(d => d.AbonentId == abonentId)
+                    .Join(dbContext.DeviceTypes, d => d.Type, t => t.Id, (d, t) => new AbonentDevice
+                    {
+                        Id = d.Id,
+                        AbonentId = d.AbonentId,
+                        DeviceNumber = d.DeviceNumber,
+                        IndicationDate = d.IndicationDate,
+                        LastIndication = d.LastIndication,
+                        VerificationPeriod = d.VerificationPeriod,
+                        TypeId = d.Type,
+                        TypeName = t.TypeName
+                    }).ToListAsync();
+
+                return new DbRepoResult<IEnumerable<AbonentDevice>>
                 {
-                    Id = d.Id,
-                    AbonentId = d.AbonentId,
-                    DeviceNumber = d.DeviceNumber,
-                    IndicationDate = d.IndicationDate,
-                    LastIndication = d.LastIndication,
-                    VerificationPeriod = d.VerificationPeriod,
-                    TypeId = d.Type,
-                    TypeName = t.TypeName
-                }).ToListAsync();
+                    ResultCode = ResultCodeEnum.Ok,
+                    InnerMessage = "",
+                    InnerObject = devices
+                };
+            }
+            catch (Exception ex)
+            {
+                return new DbRepoResult<IEnumerable<AbonentDevice>>
+                {
+                    ResultCode = ResultCodeEnum.Error,
+                    InnerMessage = ex.Message,
+                    InnerObject = null
+                };
+            }
         }
     }
 }
