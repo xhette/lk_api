@@ -17,7 +17,7 @@ namespace lk_api.LkDatabase.Models
         public string? CompanyPhone { get; set; }
         public string? CompanyEmail { get; set; }
 
-        public static explicit operator AbonentTariff (AbonentsTariff tariff)
+        public static explicit operator AbonentTariff (TariffView tariff)
         {
             if (tariff == null)
                 return null;
@@ -25,7 +25,7 @@ namespace lk_api.LkDatabase.Models
             {
                 Id = tariff.Id,
                 AbonentId = tariff.AbonentId,
-                TariffName = tariff.TariffName,
+                TariffName = string.IsNullOrEmpty(tariff.TariffName) ? "" : tariff.TariffName,
                 Payment = tariff.Payment,
                 Unit = tariff.Unit,
                 CompanyId = tariff.CompanyId,

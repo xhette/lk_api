@@ -2,13 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using lk.DbLayer;
 
 using lk_api.LkDatabase.Models;
+using lk_api.UsersDatabase;
 
-using lk_db;
-
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,41 +17,47 @@ namespace lk_api.Controllers
     [ApiController]
     public class TariffsController : ControllerBase
     {
-        private readonly lkDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly DatabaseRepository dbRepository;
 
-        public TariffsController(lkDbContext context)
+        public TariffsController(UserManager<User> userManager, IConfiguration configuration)
         {
-            _context = context;
+            _userManager = userManager;
+            dbRepository = new DatabaseRepository(configuration.GetConnectionString("LkDbConnection"));
         }
 
         // GET: api/Tariffs
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AbonentTariff>>> GetTariffs()
         {
-            var tariffs = _context.Tariffs.Join(_context.UsersTariffs, 
-                t => t.Id, 
-                u => u.TariffId, (t, u) => new { 
-                    t.Id, 
-                    u.AbonentId,
-                    t.CompanyId,
-                    t.TariffName,
-                    t.Payment,
-                    t.Unit
-                });
-
-            return await tariffs.Join(_context.Companies, t => t.CompanyId, c => c.Id, (t, c) => new AbonentTariff
+            if (!User.Identity.IsAuthenticated)
             {
-                Id = t.Id,
-                AbonentId = t.AbonentId,
-                CompanyId = t.CompanyId,
-                TariffName = t.TariffName,
-                Payment = t.Payment,
-                Unit = t.Unit,
-                CompanyName = c.Name,
-                CompanyAddress = c.Address,
-                CompanyEmail = c.Email,
-                CompanyPhone = c.Phone,
-            }).ToListAsync();
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не авторизован");
+            }
+
+            User user = await _userManager.FindByNameAsync(User.Identity.Name);
+
+            if (user == null)
+            {
+                return StatusCode(StatusCodes.Status401Unauthorized, "Пользователь не найден");
+            }
+
+            var abonentResult = await dbRepository.GetTariffs(user.AbonentId.Value);
+
+            if (abonentResult == null)
+            {
+                return NotFound();
+            }
+
+            if (abonentResult.ResultCode == ResultCodeEnum.Error || abonentResult.InnerObject == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, abonentResult.InnerMessage);
+            }
+            else
+            {
+                List<AbonentTariff> devices = abonentResult.InnerObject.Select(c => (AbonentTariff)c).ToList();
+                return devices;
+            }
         }
     }
 }

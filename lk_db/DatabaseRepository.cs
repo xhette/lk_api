@@ -84,13 +84,35 @@ namespace lk.DbLayer
         }
 
         // TO-DO: хуйня переделывай
-        public async Task<DbRepoResult<IEnumerable<Tariff>>> GetTariffs(int abonentId)
+        public async Task<DbRepoResult<IEnumerable<TariffView>>> GetTariffs(int abonentId)
         {
             try
             {
-                var tariffs = await dbContext.Tariffs.ToListAsync();
+                var tariffs = await dbContext.Tariffs.Join(dbContext.UsersTariffs,
+                t => t.Id,
+                u => u.TariffId, (t, u) => new {
+                    t.Id,
+                    u.AbonentId,
+                    t.CompanyId,
+                    t.TariffName,
+                    t.Payment,
+                    t.Unit
+                })
+                    .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new TariffView
+                    {
+                        Id = t.Id,
+                        AbonentId = t.AbonentId,
+                        CompanyId = t.CompanyId,
+                        TariffName = t.TariffName,
+                        Payment = t.Payment,
+                        Unit = t.Unit,
+                        CompanyName = c.Name,
+                        CompanyAddress = c.Address,
+                        CompanyEmail = c.Email,
+                        CompanyPhone = c.Phone,
+                    }).ToListAsync(); 
 
-                return new DbRepoResult<IEnumerable<Tariff>>
+                return new DbRepoResult<IEnumerable<TariffView>>
                 {
                     InnerMessage = "",
                     InnerObject = tariffs.Where(a => a.Id == abonentId).ToList(),
@@ -99,7 +121,7 @@ namespace lk.DbLayer
             }
             catch (Exception ex)
             {
-                return new DbRepoResult<IEnumerable<Tariff>>
+                return new DbRepoResult<IEnumerable<TariffView>>
                 {
                     ResultCode = ResultCodeEnum.Error,
                     InnerMessage = ex.Message,
