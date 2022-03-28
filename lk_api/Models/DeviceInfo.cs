@@ -15,7 +15,7 @@ namespace lk_api.LkDatabase.Models
         public int TypeId { get; set; }
         public string? TypeName { get; set; }
 
-        public static explicit operator DeviceInfo (AbonentDevice device)
+        public static explicit operator DeviceInfo (DeviceDTO device)
         {
             if (device == null)
                 return null;
@@ -32,11 +32,11 @@ namespace lk_api.LkDatabase.Models
             };
         }
 
-        public static explicit operator AbonentDevice(DeviceInfo device)
+        public static explicit operator DeviceDTO(DeviceInfo device)
         {
             if (device == null)
                 return null;
-            else return new AbonentDevice
+            else return new DeviceDTO
             {
                 Id = device.Id,
                 AbonentId = device.AbonentId,

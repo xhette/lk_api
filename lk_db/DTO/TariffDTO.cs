@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lk.DbLayer.LkDatabase.Models
 {
-    public class TariffView
+    public class TariffDTO
     {
         public int Id { get; set; }
         public int AbonentId { get; set; }

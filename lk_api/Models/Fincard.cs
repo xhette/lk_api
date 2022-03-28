@@ -10,7 +10,7 @@ namespace lk.API.Models
         public decimal Prepayment { get; set; }
         public decimal Payment { get; set; }
 
-        public static explicit operator Fincard (AbonentFincard fincard)
+        public static explicit operator Fincard (FincardDTO fincard)
         {
             if (fincard == null)
                 return null;

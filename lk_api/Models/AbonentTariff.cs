@@ -17,7 +17,7 @@ namespace lk_api.LkDatabase.Models
         public string? CompanyPhone { get; set; }
         public string? CompanyEmail { get; set; }
 
-        public static explicit operator AbonentTariff (TariffView tariff)
+        public static explicit operator AbonentTariff (TariffDTO tariff)
         {
             if (tariff == null)
                 return null;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace lk.DbLayer.LkDatabase.Models
 {
-    public class AbonentFincard
+    public class FincardDTO
     {
         public int AbonentId { get; set; }
         public List<Accural> Accurals { get; set; }
@@ -16,12 +16,12 @@ namespace lk.DbLayer.LkDatabase.Models
         public decimal Prepayment { get; set; }
         public decimal Payment { get; set; }
 
-        public AbonentFincard()
+        public FincardDTO()
         {
             Accurals = new List<Accural>();
         }
 
-        public AbonentFincard(List<Accural> accurals)
+        public FincardDTO(List<Accural> accurals)
         {
             Accurals = new List<Accural>(accurals);
         }

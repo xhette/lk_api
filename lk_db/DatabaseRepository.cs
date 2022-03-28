@@ -84,7 +84,7 @@ namespace lk.DbLayer
         }
 
         // TO-DO: хуйня переделывай
-        public async Task<DbRepoResult<IEnumerable<TariffView>>> GetTariffs(int abonentId)
+        public async Task<DbRepoResult<IEnumerable<TariffDTO>>> GetTariffs(int abonentId)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace lk.DbLayer
                     t.Payment,
                     t.Unit
                 })
-                    .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new TariffView
+                    .Join(dbContext.Companies, t => t.CompanyId, c => c.Id, (t, c) => new TariffDTO
                     {
                         Id = t.Id,
                         AbonentId = t.AbonentId,
@@ -112,7 +112,7 @@ namespace lk.DbLayer
                         CompanyPhone = c.Phone,
                     }).ToListAsync(); 
 
-                return new DbRepoResult<IEnumerable<TariffView>>
+                return new DbRepoResult<IEnumerable<TariffDTO>>
                 {
                     InnerMessage = "",
                     InnerObject = tariffs.Where(a => a.Id == abonentId).ToList(),
@@ -121,7 +121,7 @@ namespace lk.DbLayer
             }
             catch (Exception ex)
             {
-                return new DbRepoResult<IEnumerable<TariffView>>
+                return new DbRepoResult<IEnumerable<TariffDTO>>
                 {
                     ResultCode = ResultCodeEnum.Error,
                     InnerMessage = ex.Message,
@@ -129,13 +129,13 @@ namespace lk.DbLayer
                 };
             }
         }
-        public async Task<DbRepoResult<AbonentFincard>> GetFincard(int abonentId)
+        public async Task<DbRepoResult<FincardDTO>> GetFincard(int abonentId)
         {
             try
             {
                 var fincard = await dbContext.Accurals.Where(a => a.Id == abonentId).ToListAsync();
 
-                AbonentFincard abonentFincard = new AbonentFincard(fincard);
+                FincardDTO abonentFincard = new FincardDTO(fincard);
                 abonentFincard.AbonentId = abonentId;
 
                 if (fincard.Count > 0)
@@ -147,7 +147,7 @@ namespace lk.DbLayer
                     abonentFincard.Debt = fincardLast.Debt;
                 }
 
-                return new DbRepoResult<AbonentFincard>
+                return new DbRepoResult<FincardDTO>
                 {
                     ResultCode = ResultCodeEnum.Ok,
                     InnerMessage = "",
@@ -156,7 +156,7 @@ namespace lk.DbLayer
             }
             catch (Exception ex)
             {
-                return new DbRepoResult<AbonentFincard>
+                return new DbRepoResult<FincardDTO>
                 {
                     ResultCode = ResultCodeEnum.Error,
                     InnerMessage = ex.Message,
@@ -165,12 +165,12 @@ namespace lk.DbLayer
             }
         }
 
-        public async Task<DbRepoResult<IEnumerable<AbonentDevice>>> GetDevices(int abonentId)
+        public async Task<DbRepoResult<IEnumerable<DeviceDTO>>> GetDevices(int abonentId)
         {
             try
             {
                 var devices = await dbContext.Devices.Where(d => d.AbonentId == abonentId)
-                    .Join(dbContext.DeviceTypes, d => d.Type, t => t.Id, (d, t) => new AbonentDevice
+                    .Join(dbContext.DeviceTypes, d => d.Type, t => t.Id, (d, t) => new DeviceDTO
                     {
                         Id = d.Id,
                         AbonentId = d.AbonentId,
@@ -182,7 +182,7 @@ namespace lk.DbLayer
                         TypeName = t.TypeName
                     }).ToListAsync();
 
-                return new DbRepoResult<IEnumerable<AbonentDevice>>
+                return new DbRepoResult<IEnumerable<DeviceDTO>>
                 {
                     ResultCode = ResultCodeEnum.Ok,
                     InnerMessage = "",
@@ -191,7 +191,7 @@ namespace lk.DbLayer
             }
             catch (Exception ex)
             {
-                return new DbRepoResult<IEnumerable<AbonentDevice>>
+                return new DbRepoResult<IEnumerable<DeviceDTO>>
                 {
                     ResultCode = ResultCodeEnum.Error,
                     InnerMessage = ex.Message,

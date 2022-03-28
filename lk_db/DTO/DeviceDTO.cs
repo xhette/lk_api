@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lk.DbLayer.LkDatabase.Models
 {
-    public class AbonentDevice
+    public class DeviceDTO
     {
         public int Id { get; set; }
         public string DeviceNumber { get; set; } = null!;
